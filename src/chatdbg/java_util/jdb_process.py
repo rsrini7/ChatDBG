@@ -69,10 +69,17 @@ class JDBProcess:
             jdwp_port = self._find_available_port()
             print(f"Using JDWP port: {jdwp_port}")
 
-            # First, start the Java process in suspended mode
+            # First, start the Java process with debugging enabled
+            # Ensure classpath includes current directory and samples/java for finding classes
+            java_classpath = self.classpath
+            if '.' not in java_classpath:
+                java_classpath = '.' + os.pathsep + java_classpath
+            if 'samples/java' not in java_classpath:
+                java_classpath = 'samples/java' + os.pathsep + java_classpath
+
             java_cmd = [
                 self._get_java_path(),
-                '-classpath', self.classpath,
+                '-classpath', java_classpath,
                 f'-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address={jdwp_port}',
                 main_class
             ]
@@ -102,17 +109,26 @@ class JDBProcess:
                 return False
 
             # Now start JDB attached to the JVM
+            # Ensure classpath includes current directory and samples/java for finding compiled classes
+            jdb_classpath = self.classpath
+            if '.' not in jdb_classpath:
+                jdb_classpath = '.' + os.pathsep + jdb_classpath
+            if 'samples/java' not in jdb_classpath:
+                jdb_classpath = 'samples/java' + os.pathsep + jdb_classpath
+
+            # Now start JDB attached to the JVM
             # Ensure classpath includes current directory for finding compiled classes
             jdb_classpath = self.classpath
             if '.' not in jdb_classpath:
                 jdb_classpath = '.' + os.pathsep + jdb_classpath
+            if 'samples/java' not in jdb_classpath:
+                jdb_classpath = 'samples/java' + os.pathsep + jdb_classpath
 
+            # Use the correct JDB syntax for connecting to a running JVM
             jdb_cmd = [
-                self._get_java_path(),
+                'jdb',
                 '-classpath', jdb_classpath,
-                'com.sun.tools.jdb.Main',
-                '-connect',
-                f'com.sun.jdi.SocketAttach:hostname=localhost,port={jdwp_port}'
+                '-connect', f'com.sun.jdi.SocketAttach:hostname=localhost,port={jdwp_port}'
             ]
 
             # Start JDB process
