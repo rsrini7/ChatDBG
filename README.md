@@ -106,6 +106,21 @@ To use ChatDBG to debug Python programs, simply run your Python script as follow
 chatdbg -c continue yourscript.py
 ```
 
+### Debugging Java
+
+To use ChatDBG to debug Java programs, compile your Java code with debug information and use the `--java` flag:
+
+```bash
+# Compile with debug information
+javac -g MyProgram.java
+
+# Start ChatDBG with JDB
+chatdbg --java MyProgram
+
+# With command line arguments
+chatdbg --java MyProgram arg1 arg2
+```
+
 ChatDBG is an extension of the standard Python debugger `pdb`. Like
 `pdb`, when your script encounters an uncaught exception, ChatDBG will
 enter post mortem debugging mode.
@@ -186,7 +201,7 @@ To use ChatDBG with Java code, compile your Java program with debug information 
 javac -g MyProgram.java
 
 # Start ChatDBG with JDB
-python3 -m chatdbg --java MyProgram
+chatdbg --java MyProgram
 ```
 
 When your Java program encounters an exception or breakpoint, ChatDBG will help you understand what went wrong:

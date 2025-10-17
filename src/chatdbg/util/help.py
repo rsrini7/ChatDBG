@@ -3,21 +3,27 @@ import sys
 from chatdbg.util.config import chatdbg_config
 
 _usage = """\
-usage: python -m ipdb [-m] [-c command] ... pyfile [arg] ...
+usage: chatdbg --java <main-class> [args...]  # Debug Java programs
+       chatdbg [-m] [-c command] ... pyfile [arg] ...  # Debug Python programs
 
-Debug the Python program given by pyfile.
+Debug the Python program given by pyfile or Java program given by main-class.
 
-Initial commands are read from .pdbrc files in your home directory
-and in the current directory, if they exist.  Commands supplied with
--c are executed after commands from .pdbrc files.
+For Python debugging:
+  Initial commands are read from .pdbrc files in your home directory
+  and in the current directory, if they exist.  Commands supplied with
+  -c are executed after commands from .pdbrc files.
 
-To let the script run until an exception occurs, use "-c continue".
-To let the script run up to a given line X in the debugged file, use
-"-c 'until X'"
+  To let the script run until an exception occurs, use "-c continue".
+  To let the script run up to a given line X in the debugged file, use
+  "-c 'until X'"
 
-Option -m is available only in Python 3.7 and later.
+  Option -m is available only in Python 3.7 and later.
 
-ChatDBG-specific options may appear anywhere before pyfile:
+For Java debugging:
+  Use --java <main-class> to debug Java applications with JDB.
+  The Java class must be compiled with debug information (-g flag).
+
+ChatDBG-specific options may appear anywhere before pyfile or main-class:
 """
 
 

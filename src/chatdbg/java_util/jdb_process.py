@@ -5,7 +5,7 @@ import os
 import signal
 import time
 import threading
-from typing import List, Optional, Tuple, Any
+from typing import List, Optional, Tuple, Any, Dict
 from queue import Queue, Empty
 
 

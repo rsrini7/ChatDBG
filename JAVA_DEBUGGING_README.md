@@ -30,10 +30,7 @@ ChatDBG now supports Java debugging through JDB (Java Debugger) integration, ena
 
 ### Optional Dependencies
 
-For enhanced Java debugging capabilities, install additional packages:
-```bash
-python3 -m pip install javadbg-utils pyjdb
-```
+No additional packages are required for Java debugging. ChatDBG uses JDK's built-in tools (javap, jdb) for Java debugging functionality.
 
 ## Quick Start
 
@@ -46,7 +43,7 @@ python3 -m pip install javadbg-utils pyjdb
 
 2. **Start ChatDBG with JDB**:
    ```bash
-   python3 -m chatdbg --java MyProgram
+   chatdbg --java MyProgram
    ```
 
 3. **When the program hits a breakpoint or exception, use**:
@@ -66,7 +63,7 @@ For enterprise applications:
 
 2. **Start with debugging**:
    ```bash
-   python3 -m chatdbg --java --classpath $CLASSPATH com.example.MySpringApp
+   chatdbg --java com.example.MySpringApp
    ```
 
 ## Usage Examples
@@ -321,7 +318,7 @@ Analyze JVM memory usage:
 
 2. **Attach ChatDBG**:
    ```bash
-   python3 -m chatdbg --java --attach localhost:5005 MyClass
+   chatdbg --java MyClass
    ```
 
 ### Eclipse
@@ -332,7 +329,7 @@ Analyze JVM memory usage:
 
 2. **Use ChatDBG**:
    ```bash
-   python3 -m chatdbg --java --attach localhost:5005 MyClass
+   chatdbg --java MyClass
    ```
 
 ## Best Practices
