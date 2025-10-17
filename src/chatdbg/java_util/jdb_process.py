@@ -8,6 +8,7 @@ import threading
 import socket
 from typing import List, Optional, Tuple, Any, Dict
 from queue import Queue, Empty
+import re
 
 
 class JDBProcess:
@@ -94,7 +95,7 @@ class JDBProcess:
                 stderr=subprocess.PIPE,
                 stdin=subprocess.PIPE,
                 text=True,
-                bufsize=0
+                bufsize=1
             )
 
             # Wait a moment for JVM to start
@@ -139,7 +140,7 @@ class JDBProcess:
                 stderr=subprocess.PIPE,
                 stdin=subprocess.PIPE,
                 text=True,
-                bufsize=0
+                bufsize=1
             )
 
             # Check if JDB process started successfully
@@ -229,17 +230,27 @@ class JDBProcess:
 
     def wait_for_prompt(self, timeout: float = 5.0) -> bool:
         """Wait for JDB prompt indicating command completion."""
+        import re
         start_time = time.time()
+        # Regex to match either the standard '>' prompt or a thread prompt like 'main[1] '
+        prompt_regex = re.compile(r'(>|(\w+\[\d+\]))\s*$')
 
+        full_output = []
         while time.time() - start_time < timeout:
-            lines, _ = self.get_output(timeout=0.1)
+            lines, _ = self.get_output(timeout=0.2)
 
             for line in lines:
-                if line.startswith('>') or line.endswith('>'):
-                    return True
+                full_output.append(line)
+                print(f"[DEBUG] JDB_OUTPUT: {line}") # Diagnostic print
+                if prompt_regex.search(line):
+                    print("[DEBUG] Prompt found!")
+                    return True 
 
             time.sleep(0.1)
 
+        print("[DEBUG] Timeout waiting for prompt. Full output received during wait:")
+        for line in full_output:
+            print(f"[DEBUG] JDB_OUTPUT (on timeout): {line}")
         return False
 
     def run_command(self, command: str, timeout: float = 5.0) -> Tuple[str, str]:
