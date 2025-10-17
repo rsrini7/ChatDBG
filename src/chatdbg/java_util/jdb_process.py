@@ -5,6 +5,7 @@ import os
 import signal
 import time
 import threading
+import socket
 from typing import List, Optional, Tuple, Any, Dict
 from queue import Queue, Empty
 
@@ -16,6 +17,7 @@ class JDBProcess:
         self.java_home = java_home or os.environ.get('JAVA_HOME', '')
         self.classpath = classpath
         self.process: Optional[subprocess.Popen] = None
+        self.jdb_process: Optional[subprocess.Popen] = None
         self.output_queue = Queue()
         self.error_queue = Queue()
         self._stop_event = threading.Event()
@@ -48,14 +50,30 @@ class JDBProcess:
 
         raise FileNotFoundError("java command not found. Please ensure JDK is installed.")
 
+    def _find_available_port(self, start_port: int = 5005) -> int:
+        """Find an available port for JDWP debugging."""
+        port = start_port
+        while port < start_port + 100:  # Try up to 100 ports
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    sock.bind(('localhost', port))
+                    return port
+            except OSError:
+                port += 1
+        raise RuntimeError(f"No available ports found in range {start_port}-{start_port + 100}")
+
     def start_jdb(self, main_class: str, args: List[str] = None) -> bool:
         """Start JDB attached to a Java process."""
         try:
+            # Find an available port for JDWP
+            jdwp_port = self._find_available_port()
+            print(f"Using JDWP port: {jdwp_port}")
+
             # First, start the Java process in suspended mode
             java_cmd = [
                 self._get_java_path(),
                 '-classpath', self.classpath,
-                '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005',
+                f'-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address={jdwp_port}',
                 main_class
             ]
 
@@ -77,18 +95,28 @@ class JDBProcess:
 
             if self.process.poll() is not None:
                 # Process failed to start
+                print(f"Java process failed to start. Return code: {self.process.poll()}")
+                stdout, stderr = self.process.communicate()
+                print(f"Java process stdout: {stdout}")
+                print(f"Java process stderr: {stderr}")
                 return False
 
             # Now start JDB attached to the JVM
+            # Ensure classpath includes current directory for finding compiled classes
+            jdb_classpath = self.classpath
+            if '.' not in jdb_classpath:
+                jdb_classpath = '.' + os.pathsep + jdb_classpath
+
             jdb_cmd = [
                 self._get_java_path(),
-                '-classpath', self.classpath,
+                '-classpath', jdb_classpath,
                 'com.sun.tools.jdb.Main',
                 '-connect',
-                'com.sun.jdi.SocketAttach:hostname=localhost,port=5005'
+                f'com.sun.jdi.SocketAttach:hostname=localhost,port={jdwp_port}'
             ]
 
             # Start JDB process
+            print(f"Starting JDB with command: {' '.join(jdb_cmd)}")
             self.jdb_process = subprocess.Popen(
                 jdb_cmd,
                 stdout=subprocess.PIPE,
@@ -98,13 +126,25 @@ class JDBProcess:
                 bufsize=0
             )
 
+            # Check if JDB process started successfully
+            time.sleep(2)
+            if self.jdb_process.poll() is not None:
+                print(f"JDB process failed to start. Return code: {self.jdb_process.poll()}")
+                stdout, stderr = self.jdb_process.communicate()
+                print(f"JDB process stdout: {stdout}")
+                print(f"JDB process stderr: {stderr}")
+                return False
+
             # Start output monitoring threads
             self._start_output_monitoring()
 
+            print("JDB process started successfully")
             return True
 
         except Exception as e:
             print(f"Error starting JDB: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def _start_output_monitoring(self):

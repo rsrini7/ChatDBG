@@ -42,7 +42,7 @@ def main() -> None:
         from chatdbg.chatdbg_jdb import start_jdb_session
 
         # Start JDB session
-        dialog = start_jdb_session(java_class, java_args=java_args)
+        dialog = start_jdb_session(java_class, java_args)
 
         if dialog:
             # Start the chat dialog

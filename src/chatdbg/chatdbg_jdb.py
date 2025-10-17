@@ -268,11 +268,15 @@ def start_jdb_session(main_class: str, classpath: str = '.', java_args: List[str
             else:
                 dialog.classpath_manager.add_class_dir(entry)
 
+    # Ensure current directory is in classpath for finding compiled classes
+    if '.' not in dialog.classpath_manager.get_classpath_string():
+        dialog.classpath_manager.add_class_dir('.')
+
     # Initialize JDB process
     dialog.jdb_process = JDBProcess(java_home=dialog.java_home,
                                    classpath=dialog.classpath_manager.get_classpath_string())
 
-    if dialog.jdb_process.start_jdb(main_class, java_args or []):
+    if dialog.jdb_process.start_jdb(main_class, java_args):
         return dialog
     else:
         print("Failed to start JDB session")
