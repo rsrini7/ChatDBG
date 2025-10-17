@@ -141,6 +141,25 @@ class Assistant:
                     to use the {self._model} model: {', '.join(missing_keys)}."""
                     )
                 )
+            
+            if 'ollama' not in self._model:
+                try:
+                    if not litellm.supports_function_calling(self._model):
+                        raise AssistantError(
+                            textwrap.dedent(
+                                f"""\
+                            The {self._model} model does not support function calls.
+                            You must use a model that does, eg. gpt-4."""
+                            )
+                        )
+                except:
+                    raise AssistantError(
+                        textwrap.dedent(
+                            f"""\
+                        {self._model} does not appear to be a supported model.
+                        See https://docs.litellm.ai/docs/providers."""
+                        )
+                    )
 
         try:
             if not litellm.supports_function_calling(self._model):
