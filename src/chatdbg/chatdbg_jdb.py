@@ -319,6 +319,10 @@ def start_jdb_session(main_class: str, classpath: str = '.', java_args: List[str
                                    classpath=dialog.classpath_manager.get_classpath_string())
 
     if dialog.jdb_process.start_jdb(main_class, java_args):
+        # Run the program to hit the first breakpoint or exception.
+        # This is crucial for the initial prompt to have a stack trace.
+        print("Running program in JDB...")
+        dialog.jdb_process.run_command('run')
         return dialog
     else:
         print("Failed to start JDB session")

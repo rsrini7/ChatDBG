@@ -1,4 +1,5 @@
 import sys
+import litellm
 
 from . import clangd_lsp_integration
 from ..util.prompts import (
@@ -201,6 +202,17 @@ class DBGDialog:
 
         functions = self._supported_functions()
         instruction_prompt = self.initial_prompt_instructions()
+        model_name = chatdbg_config.model
+
+        # Register Ollama models with default token limits if not in litellm's model_cost list.
+        if 'ollama' in model_name and model_name not in litellm.model_cost:
+            litellm.register_model({
+                model_name: {
+                    "litellm_provider": model_name.split('/')[0],
+                    "max_input_tokens": 8192,  # A reasonable default for local models
+                    "max_output_tokens": 8192,  # A reasonable default for local models
+                }
+            })
 
         # gdb overwrites sys.stdin to be a file object that doesn't seem
         # to support colors or streaming.  So, just use the original stdout
@@ -209,7 +221,7 @@ class DBGDialog:
 
         assistant = Assistant(
             instruction_prompt,
-            model=chatdbg_config.model,
+            model=model_name,
             functions=functions,
             listeners=[
                 printer,
