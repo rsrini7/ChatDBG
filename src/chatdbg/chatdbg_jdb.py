@@ -228,12 +228,54 @@ class JDBDialog(DBGDialog):
         return base_command in safe_commands
 
     def llm_get_code_surrounding(self, filename: str, line_number: int) -> Tuple[str, str]:
-        """Get source code surrounding a line."""
+        """
+        {
+            "name": "get_code_surrounding",
+            "description": "The `get_code_surrounding` function returns the source code in the given file surrounding and including the provided line number.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "The filename to read from."
+                    },
+                    "line_number": {
+                        "type": "integer",
+                        "description": "The line number to focus on. Some context before and after that line will be provided."
+                    }
+                },
+                "required": [ "filename", "line_number" ]
+            }
+        }
+        """
         lines = source_analyzer.get_lines_around(filename, line_number)
         return f"code {filename}:{line_number}", '\n'.join(lines)
 
     def llm_find_definition(self, filename: str, line_number: int, symbol: str) -> Tuple[str, str]:
-        """Find definition of a Java symbol."""
+        """
+        {
+            "name": "find_definition",
+            "description": "The `find_definition` function returns the source code for the definition for the given symbol at the given source line number. Call `find_definition` on every symbol that could be linked to the issue.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "The filename the symbol is from."
+                    },
+                    "line_number": {
+                        "type": "integer",
+                        "description": "The line number where the symbol is present."
+                    },
+                    "symbol": {
+                        "type": "string",
+                        "description": "The symbol to lookup."
+                    }
+                },
+                "required": [ "filename", "line_number", "symbol" ]
+            }
+        }
+        """
         # Try to use javap for class/method information
         if '.' in symbol:
             class_name = symbol.split('.')[0]

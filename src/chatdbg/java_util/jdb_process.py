@@ -127,7 +127,7 @@ class JDBProcess:
             # Use the correct JDB syntax for connecting to a running JVM
             jdb_cmd = [
                 'jdb',
-                '-classpath', jdb_classpath,
+                '-sourcepath', jdb_classpath,
                 '-connect', f'com.sun.jdi.SocketAttach:hostname=localhost,port={jdwp_port}'
             ]
 
