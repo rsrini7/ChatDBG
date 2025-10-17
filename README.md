@@ -8,7 +8,7 @@ by [Emery Berger](https://emeryberger.com), [Stephen Freund](https://www.cs.will
 
 [Read the paper!](https://raw.githubusercontent.com/plasma-umass/ChatDBG/main/ChatDBG.pdf)
 
-ChatDBG is an AI-based debugging assistant for C/C++/Python/Rust code that integrates large language models into a standard debugger (`pdb`, `lldb`, `gdb`) to help debug your code. With ChatDBG, you can engage in a dialog with your debugger, asking open-ended questions about your program, like `why is x null?`. ChatDBG will _take the wheel_ and steer the debugger to answer your queries. ChatDBG can provide error diagnoses and suggest fixes.
+ChatDBG is an AI-based debugging assistant for C/C++/Python/Rust/Java code that integrates large language models into standard debuggers (`pdb`, `lldb`, `gdb`, `jdb`) to help debug your code. With ChatDBG, you can engage in a dialog with your debugger, asking open-ended questions about your program, like `why is x null?`. ChatDBG will _take the wheel_ and steer the debugger to answer your queries. ChatDBG can provide error diagnoses and suggest fixes.
 
 As far as we are aware, ChatDBG is the _first_ debugger to automatically perform root cause analysis and to provide suggested fixes.
 
@@ -176,6 +176,90 @@ fn main() {
 Now you can debug your Rust code with `gdb` or `lldb`.
 
 </details>
+
+### Debugging Java code with <TT>jdb</TT>
+
+To use ChatDBG with Java code, compile your Java program with debug information and use the JDB integration:
+
+```bash
+# Compile with debug information
+javac -g MyProgram.java
+
+# Start ChatDBG with JDB
+python3 -m chatdbg --java MyProgram
+```
+
+When your Java program encounters an exception or breakpoint, ChatDBG will help you understand what went wrong:
+
+```java
+(ChatDBG jdb) why
+# AI explains: The NullPointerException occurs because 'items' is null.
+# The list was never initialized before the for-each loop tries to iterate over it.
+
+(ChatDBG jdb) locals
+# Shows current local variables and their values
+
+(ChatDBG jdb) print items
+# Shows items is null
+```
+
+<details>
+<summary>
+<B>ChatDBG example in Java (<TT>jdb</TT>)</B>
+</summary>
+
+```java
+// NullPointerExample.java
+public class NullPointerExample {
+    private List<String> items;
+
+    public void processItems() {
+        for (String item : items) {  // NullPointerException here
+            System.out.println(item.toUpperCase());
+        }
+    }
+
+    public static void main(String[] args) {
+        new NullPointerExample().processItems();
+    }
+}
+```
+
+**Debugging session**:
+```java
+(ChatDBG jdb) why
+The root cause of this NullPointerException is that the `items` field is null when the `processItems()` method tries to iterate over it. In Java, uninitialized object fields are null by default, and calling methods on null references causes NullPointerExceptions.
+
+To fix this, you need to initialize the `items` list. Here's the corrected code:
+
+```java
+public class NullPointerExample {
+    private List<String> items = new ArrayList<>();  // Initialize the list
+
+    public void processItems() {
+        for (String item : items) {
+            System.out.println(item.toUpperCase());
+        }
+    }
+
+    public static void main(String[] args) {
+        new NullPointerExample().processItems();
+    }
+}
+```
+
+This fix ensures that `items` is always a valid ArrayList, preventing the NullPointerException while maintaining the same functionality.
+
+(ChatDBG jdb) print items
+items = null
+
+(ChatDBG jdb) dump items
+items = (NullPointerExample) null
+```
+
+</details>
+
+For comprehensive Java debugging documentation, see [JAVA_DEBUGGING_README.md](JAVA_DEBUGGING_README.md).
 
 ### Examples
 
